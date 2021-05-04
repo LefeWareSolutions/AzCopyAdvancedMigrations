@@ -1,0 +1,17 @@
+pool: 
+  name: $(agentName)
+
+jobs:
+- job: Migrate 
+  timeoutInMinutes: 0
+  steps:
+    - task: AzureCLI@2
+      displayName: Resume Failed Job
+      inputs:
+        azureSubscription: $(azureSubscriptionEndpoint)
+        scriptType: 'ps'
+        addSpnToEnvironment: true
+        scriptLocation: 'scriptPath'
+        scriptPath: './storage-migration/blob-storage/AzureStorageMigration.ps1'
+        arguments: -jobId $(jobId) -tenantId $env:tenantId -servicePrincipleClientId $env:servicePrincipalId -servicePrincipleClientSecret $env:servicePrincipalKey
+    
