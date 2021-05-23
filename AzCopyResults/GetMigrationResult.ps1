@@ -5,57 +5,91 @@ param (
     
     [String]
     $srcStorageAccessKey,
-    
+
     [String]
-    $destinationStorageAccountName
+    $destinationStorageAccountName,
+
+    [String[]]
+    $resultType,
+    
+    [Int]
+    $startIndex,
+
+    [Int]
+    $endIndex
 )
 
 
-###########################SRC ACCOUNT CALCULATIONS#########################################
-$srcBlobCount = 0;
-$srcContainerCount = 0;
-$srcStorageSize = 0;
+function DisplayStorageAccountResults {
+    param (
+        $storageAccountContext,
+        $containers
+    )
 
+    $blobCount = 0;
+    $containerCount = 0;
+    $storageSize = 0;
+
+    foreach($container in $containers)
+    {
+        $containerCount++;
+        
+        #Blobs counts
+        $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
+        $blobCount = $blobCount + $blobs.Count
+    
+        #container size
+        $storageSize = $storageSize + $blobs.Length
+    }
+
+    Write-Host $storageAccountContext.StorageAccountName " Results:"
+    Write-Host "Total number of containers:"  $containerCount
+    Write-Host "Total number of blobs:" $blobCount
+    Write-Host "Total storage size:" $storageSize "MB"
+}
+
+function DisplayStorageContainerResults {
+    param (
+        $storageAccountContext,
+        $containers,
+        $startIndex,
+        $endIndex
+    )
+
+    foreach($container in $containers)
+    {
+        $containerName = $container.Name
+        $containerNameInt = [int]$containerName
+        if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex)
+        {
+            $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
+            Write-Host "Blob Container" $container.Name "Results:"
+            Write-Host "Total number of blobs: " $blobs.Count
+            Write-Host "Total storage size: " $blobs.Length "MB"
+        }
+    }
+}
+
+###########################SRC ACCOUNT CALCULATIONS#########################################
 $srcStorageAccountContext = New-AzStorageContext -StorageAccountName $srcStorageAccountName -StorageAccountKey $srcStorageAccessKey
 $srcContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
-foreach($container in $srcContainers)
+if($resultType.Contains("Range"))
 {
-    $srcContainerCount++;
-    
-    #Blobs counts
-    $blobs = Get-AzStorageBlob -Context $srcStorageAccountContext -Container $container.Name;
-    $srcBlobCount = $srcBlobCount + $blobs.Count
-
-    #container size
-    $srcStorageSize = $srcStorageSize + $blobs.Length
+    DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers -startIndex $startIndex -endIndex $endIndex
 }
-
-Write-Host $srcStorageAccountName " Results:"
-Write-Host "Total number of containers: " $srcContainerCount
-Write-Host "Total number of blobs: " $srcBlobCount
-Write-Host "Total storage size: " $srcStorageSize "MB"
-
+else 
+{
+    DisplayStorageAccountResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
+}
 
 ############################DEST ACCOUNT CALCULATIONS#########################################
-$destBlobCount = 0;
-$destContainerCount = 0;
-$destStorageSize = 0;
-
 $destStorageAccountContext = New-AzStorageContext -StorageAccountName $destinationStorageAccountName -UseConnectedAccount
-$containers = Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
-foreach($container in $containers)
+$destContainers = Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
+if($resultType.Contains("Range"))
 {
-    $destContainerCount++;
-    
-    #Blobs counts
-    $blobs = Get-AzStorageBlob -Context $destStorageAccountContext -Container $container.Name;
-    $destBlobCount = $destBlobCount + $blobs.Count
-
-    #container size
-    $destStorageSize = $destStorageSize + $blobs.Length
+    DisplayStorageContainerResults -storageAccountContext $destStorageAccountContext -containers $destContainers -startIndex $startIndex -endIndex $endIndex
 }
-
-Write-Host $destStorageAccountName " Results:"
-Write-Host "Total number of containers: " $destContainerCount
-Write-Host "Total number of blobs: " $destBlobCount
-Write-Host "Total storage size: " $destStorageSize "MB"
+else 
+{
+    DisplayStorageAccountResults -storageAccountContext $destStorageAccountContext -containers $destContainers
+}
