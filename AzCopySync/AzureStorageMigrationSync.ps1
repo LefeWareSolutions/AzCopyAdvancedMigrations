@@ -16,7 +16,7 @@ param (
     $srcStorageAccessKey,
     
     [String]
-    $destinationStorageAccountName,
+    $destinationStorageAccountName
 )
 
 #AzCopy

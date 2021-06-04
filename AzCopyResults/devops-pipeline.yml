@@ -1,5 +1,5 @@
 pool: 
-  name: 
+  name: $(agentName)
 
 jobs:
 - job: Migrate 
@@ -12,5 +12,5 @@ jobs:
         scriptType: 'ps'
         addSpnToEnvironment: true
         scriptLocation: 'scriptPath'
-        scriptPath: './storage-migration/AzCopyResults/GetMigrationResult.ps1'
+        scriptPath: './GetMigrationResult.ps1'
         arguments: -srcStorageAccountName $(srcStorageAccountName) -srcStorageAccessKey $(srcStorageAccessKey) -destinationStorageAccountName $(destinationStorageAccountName) -resultType $(resultType) -startIndex $(startIndex) -endIndex $(endIndex)

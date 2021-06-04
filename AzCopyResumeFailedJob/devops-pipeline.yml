@@ -12,6 +12,6 @@ jobs:
         scriptType: 'ps'
         addSpnToEnvironment: true
         scriptLocation: 'scriptPath'
-        scriptPath: './storage-migration/blob-storage/AzureStorageMigration.ps1'
+        scriptPath: './AzureStorageMigration.ps1'
         arguments: -jobId $(jobId) -tenantId $env:tenantId -servicePrincipleClientId $env:servicePrincipalId -servicePrincipleClientSecret $env:servicePrincipalKey
     

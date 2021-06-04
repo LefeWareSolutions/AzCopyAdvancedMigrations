@@ -1,4 +1,4 @@
-# #Parameters
+#Parameters
 param (
     [String]
     $jobId,
