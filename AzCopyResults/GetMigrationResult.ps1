@@ -12,6 +12,12 @@ param (
     [String[]]
     $resultType,
     
+    [bool]
+    $getSrc,
+
+    [bool]
+    $getDest,
+    
     [Int]
     $startIndex,
 
@@ -32,6 +38,7 @@ function DisplayStorageAccountResults {
 
     foreach($container in $containers)
     {
+        Write-Host "Calculating blob results for" $container.Name "container"
         $containerCount++;
         
         #Blobs counts
@@ -71,25 +78,30 @@ function DisplayStorageContainerResults {
 }
 
 ###########################SRC ACCOUNT CALCULATIONS#########################################
-$srcStorageAccountContext = New-AzStorageContext -StorageAccountName $srcStorageAccountName -StorageAccountKey $srcStorageAccessKey
-$srcContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
-if($resultType.Contains("Range"))
+if($getSrc -eq $true)
 {
-    DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers -startIndex $startIndex -endIndex $endIndex
+    $srcStorageAccountContext = New-AzStorageContext -StorageAccountName $srcStorageAccountName -StorageAccountKey $srcStorageAccessKey
+    $srcContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
+    if($resultType.Contains("Range"))
+    {
+        DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers -startIndex $startIndex -endIndex $endIndex
+    }
+    else 
+    {
+        DisplayStorageAccountResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
+    }
 }
-else 
-{
-    DisplayStorageAccountResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
-}
-
 ############################DEST ACCOUNT CALCULATIONS#########################################
-$destStorageAccountContext = New-AzStorageContext -StorageAccountName $destinationStorageAccountName -UseConnectedAccount
-$destContainers = Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
-if($resultType.Contains("Range"))
+if($getDest -eq $true)
 {
-    DisplayStorageContainerResults -storageAccountContext $destStorageAccountContext -containers $destContainers -startIndex $startIndex -endIndex $endIndex
-}
-else 
-{
-    DisplayStorageAccountResults -storageAccountContext $destStorageAccountContext -containers $destContainers
+    $destStorageAccountContext = New-AzStorageContext -StorageAccountName $destinationStorageAccountName -UseConnectedAccount
+    $destContainers = Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
+    if($resultType.Contains("Range"))
+    {
+        DisplayStorageContainerResults -storageAccountContext $destStorageAccountContext -containers $destContainers -startIndex $startIndex -endIndex $endIndex
+    }
+    else 
+    {
+        DisplayStorageAccountResults -storageAccountContext $destStorageAccountContext -containers $destContainers
+    }
 }
