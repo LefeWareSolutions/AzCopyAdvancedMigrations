@@ -25,83 +25,99 @@ param (
     $endIndex
 )
 
-
-function DisplayStorageAccountResults {
+###########################CALCULATE STORAGE COTAINERS#########################################
+function DisplayStorageContainerResults {
     param (
         $storageAccountContext,
         $containers
     )
 
-    $blobCount = 0;
-    $containerCount = 0;
-    $storageSize = 0;
-
+    $results = @()
     foreach($container in $containers)
     {
-        Write-Host "Calculating blob results for" $container.Name "container"
-        $containerCount++;
-        
-        #Blobs counts
         $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
-        $blobCount = $blobCount + $blobs.Count
-    
-        #container size
-        $storageSize = $storageSize + $blobs.Length
+        Write-Host "Blob Container" $container.Name "Results:"
+        Write-Host "Total number of blobs: " $blobs.Count
+        Write-Host "Total storage size: " $blobs.Length "MB"
+        $details = @{            
+            ContainerName    = $container.Name            
+            NumberOfBlobs    = $blobs.Count                 
+            StorageSize      = $blobs.Length
+        } 
+        $results += New-Object PSObject -Property $details   
     }
 
-    Write-Host $storageAccountContext.StorageAccountName " Results:"
-    Write-Host "Total number of containers:"  $containerCount
-    Write-Host "Total number of blobs:" $blobCount
-    Write-Host "Total storage size:" $storageSize "MB"
-}
+    $resultsFileName = "$(get-date -f yyyy-MM-dd-HHmmss)-Results.csv"
+    $path = ".\" + $resultsFileName 
 
-function DisplayStorageContainerResults {
-    param (
-        $storageAccountContext,
-        $containers,
-        $startIndex,
-        $endIndex
-    )
-
-    foreach($container in $containers)
+    if(!(Test-Path $path))
     {
-        $containerName = $container.Name
-        $containerNameInt = [int]$containerName
-        if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex)
-        {
-            $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
-            Write-Host "Blob Container" $container.Name "Results:"
-            Write-Host "Total number of blobs: " $blobs.Count
-            Write-Host "Total storage size: " $blobs.Length "MB"
-        }
+        New-Item -Path . -Name $resultsFileName -ItemType "file"
     }
+    $results | export-csv -Path $path -NoTypeInformation
+
+
+    $resultsContainerName = "storageresults"
+    if (!(Get-AzStorageContainer -Context $storageAccountContext | Where-Object { $_.Name -eq $resultsContainerName }))
+    {
+        New-AzStorageContainer -Name $resultsContainerName  -Context $storageAccountContext
+    }
+    Set-AzStorageBlobContent -File $path -Container $resultsContainerName -Blob $resultsFileName -Context $storageAccountContext 
 }
+
+
 
 ###########################SRC ACCOUNT CALCULATIONS#########################################
 if($getSrc -eq $true)
 {
     $srcStorageAccountContext = New-AzStorageContext -StorageAccountName $srcStorageAccountName -StorageAccountKey $srcStorageAccessKey
-    $srcContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
+    $srcContainers = @()
+
     if($resultType.Contains("Range"))
     {
-        DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers -startIndex $startIndex -endIndex $endIndex
+        $allContainers += Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
+        foreach($container in $allContainers)
+        {
+            $containerName = $container.Name
+            $containerNameInt = [int]$containerName
+            if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+            {
+                $srcContainers+=$container
+            }
+        }
     }
     else 
     {
-        DisplayStorageAccountResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
+        $srcContainers += Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
     }
+    DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
 }
+
+
+
 ############################DEST ACCOUNT CALCULATIONS#########################################
 if($getDest -eq $true)
 {
     $destStorageAccountContext = New-AzStorageContext -StorageAccountName $destinationStorageAccountName -UseConnectedAccount
-    $destContainers = Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
+    $destContainers = @()
+
     if($resultType.Contains("Range"))
     {
-        DisplayStorageContainerResults -storageAccountContext $destStorageAccountContext -containers $destContainers -startIndex $startIndex -endIndex $endIndex
+        $allContainers += Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
+        foreach($container in $allContainers)
+        {
+            $containerName = $container.Name
+            $containerNameInt = [int]$containerName
+            if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+            {
+                $destContainers+=$container
+            }
+        }
     }
     else 
     {
-        DisplayStorageAccountResults -storageAccountContext $destStorageAccountContext -containers $destContainers
+        $destContainers += Get-AzStorageContainer -Name "*" -Context $destStorageAccountContext
     }
+    DisplayStorageContainerResults -storageAccountContext $destStorageAccountContext -containers $destContainers
+
 }
