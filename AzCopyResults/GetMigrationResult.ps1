@@ -36,6 +36,8 @@ function DisplayStorageContainerResults {
     foreach($container in $containers)
     {
         $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
+        $length = 0
+        $listOfBlobs | ForEach-Object {$length = $length + $_.Length}
         Write-Host "Blob Container" $container.Name "Results:"
         Write-Host "Total number of blobs: " $blobs.Count
         Write-Host "Total storage size: " $blobs.Length "MB"
@@ -79,10 +81,18 @@ if($getSrc -eq $true)
         foreach($container in $allContainers)
         {
             $containerName = $container.Name
-            $containerNameInt = [int]$containerName
-            if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+            $containerName
+            try
             {
-                $srcContainers+=$container
+                $containerNameInt = [int]$containerName
+                if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+                {
+                    $srcContainers+=$container
+                }
+            }
+            catch
+            {
+
             }
         }
     }
@@ -107,10 +117,16 @@ if($getDest -eq $true)
         foreach($container in $allContainers)
         {
             $containerName = $container.Name
-            $containerNameInt = [int]$containerName
-            if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+            try{
+                $containerNameInt = [int]$containerName
+                if($containerNameInt -ge $startIndex -And $containerNameInt -le $endIndex) 
+                {
+                    $destContainers+=$container
+                }
+            }
+            catch
             {
-                $destContainers+=$container
+
             }
         }
     }
