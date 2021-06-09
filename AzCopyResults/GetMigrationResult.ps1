@@ -1,4 +1,4 @@
-# #Parameters
+#Parameters
 param (
     [String]
     $srcStorageAccountName,
@@ -37,14 +37,14 @@ function DisplayStorageContainerResults {
     {
         $blobs = Get-AzStorageBlob -Context $storageAccountContext -Container $container.Name;
         $length = 0
-        $listOfBlobs | ForEach-Object {$length = $length + $_.Length}
+        $blobs | ForEach-Object {$length = $length + $_.Length}
         Write-Host "Blob Container" $container.Name "Results:"
         Write-Host "Total number of blobs: " $blobs.Count
-        Write-Host "Total storage size: " $blobs.Length "MB"
+        Write-Host "Total storage size: " $length "MB"
         $details = @{            
             ContainerName    = $container.Name            
             NumberOfBlobs    = $blobs.Count                 
-            StorageSize      = $blobs.Length
+            StorageSize      = $length
         } 
         $results += New-Object PSObject -Property $details   
     }
@@ -77,11 +77,10 @@ if($getSrc -eq $true)
 
     if($resultType.Contains("Range"))
     {
-        $allContainers += Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
+        $allContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
         foreach($container in $allContainers)
         {
             $containerName = $container.Name
-            $containerName
             try
             {
                 $containerNameInt = [int]$containerName
@@ -92,7 +91,7 @@ if($getSrc -eq $true)
             }
             catch
             {
-
+                Write-Host "Unable to get results for" $containerName
             }
         }
     }
@@ -102,8 +101,6 @@ if($getSrc -eq $true)
     }
     DisplayStorageContainerResults -storageAccountContext $srcStorageAccountContext -containers $srcContainers
 }
-
-
 
 ############################DEST ACCOUNT CALCULATIONS#########################################
 if($getDest -eq $true)
