@@ -1,0 +1,17 @@
+pool: 
+  name: $(agentName)
+
+jobs:
+- job: Migrate 
+  timeoutInMinutes: 0
+  steps:
+    - task: AzureCLI@2
+      displayName: Migrate Storage Accounts
+      inputs:
+        azureSubscription: $(azureSubscriptionEndpoint)
+        scriptType: 'ps'
+        addSpnToEnvironment: true
+        scriptLocation: 'scriptPath'
+        scriptPath: './AzureStorageMigration.ps1'
+        arguments: -tenantId $env:tenantId -servicePrincipleClientId $env:servicePrincipalId -servicePrincipleClientSecret $env:servicePrincipalKey -srcStorageAccountName $(srcStorageAccountName) -srcStorageAccessKey $(srcStorageAccessKey) -destinationStorageAccountName $(destinationStorageAccountName) -useContainerNameList $(useContainerNameList)-containerNameList $(containerNameList)
+    
