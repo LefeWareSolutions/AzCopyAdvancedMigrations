@@ -8,6 +8,7 @@ Outputs metadata about a blob storage account such as the container names, total
 The following script is meant for migrating V1 storage accounts to a new V2 storage accounts. Therefore the V1 source accounts use temporary SAS keys for authentication, while the destination V2 accounts uses an AzureAD service principle AzCopy login to authenticate. The script offers several optimizations, and the ability to pass in a subset of container names to break the migration into multiple jobs
 
 ## AzCopy Restart Failed Job
+AzCopy has the ability to restart a failed/incomplete job using the job id. When an AzCopy command is run, it should ouput the jobid at the start, otherwise you can find it by running "azcopy jobs list", or navigating to the location of your AzCopy logs.
 
 ## AzCopy Sync
 

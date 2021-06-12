@@ -27,6 +27,7 @@ param (
 
 #Increases the number of concurrent requests that can occur on your machine
 $env:AZCOPY_CONCURRENCY_VALUE=1000
+$env:AZCOPY_LOG_LOCATION="./"
 $azCopyPath="C:\AzCopy\azcopy.exe" 
 
 ###########################PERFORM LOGIN TO NEW SUBSCRIPTION#########################################

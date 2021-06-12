@@ -12,6 +12,6 @@ jobs:
         scriptType: 'ps'
         addSpnToEnvironment: true
         scriptLocation: 'scriptPath'
-        scriptPath: './AzureStorageMigration.ps1'
+        scriptPath: './AzCopyResumeFailedJob.ps1'
         arguments: -jobId $(jobId) -tenantId $env:tenantId -servicePrincipleClientId $env:servicePrincipalId -servicePrincipleClientSecret $env:servicePrincipalKey
     
