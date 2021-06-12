@@ -15,10 +15,17 @@ param (
     $srcStorageAccessKey,
     
     [String]
-    $destinationStorageAccountName
+    $destinationStorageAccountName,
+    
+    [bool]
+    $useContainerNameList,
+
+    [String[]]
+    $containerNameList
 )
 
 ###########################PERFORM LOGIN TO NEW SUBSCRIPTION#########################################
+$azCopyPath="C:\AzCopy\azcopy.exe" 
 $env:AZCOPY_SPA_CLIENT_SECRET=$servicePrincipleClientSecret
 &$azCopyPath  login --service-principal --application-id $servicePrincipleClientId --tenant-id $tenantId
 
@@ -35,14 +42,17 @@ $destinationStorageAccountUrl = "https://" + $destinationStorageAccountName + ".
 $srcContainers = Get-AzStorageContainer -Name "*" -Context $srcStorageAccountContext
 foreach($container in $srcContainers)
 {
-  $containerName = $container.Name
-  Write-Host "Syncing container $containerName from source to dest."
-  $srcStorageAccountSASToken = New-AzStorageContainerSASToken -Context $srcStorageAccountContext `
-      -Name $containerName `
-      -Permission racwdl `
-      -ExpiryTime $EndTime
+    $containerName = $container.Name
+    if($useContainerNameList -or $containerNameList.Contains($containerName))
+    {
+        Write-Host "Syncing container $containerName from source to dest."
+        $srcStorageAccountSASToken = New-AzStorageContainerSASToken -Context $srcStorageAccountContext `
+          -Name $containerName `
+          -Permission racwdl `
+          -ExpiryTime $EndTime
 
-    $srcContainerUrl = $srcStorageAccountUrl + $containerName + $srcStorageAccountSASToken
-    $destContainerUrl = $destinationStorageAccountUrl + $containerName
-    &$copyPath sync $srcContainerUrl $destContainerUrl --recursive=true
+        $srcContainerUrl = $srcStorageAccountUrl + $containerName + $srcStorageAccountSASToken
+        $destContainerUrl = $destinationStorageAccountUrl + $containerName
+        &$azCopyPath sync $srcContainerUrl $destContainerUrl --recursive=true
+    }
 }
