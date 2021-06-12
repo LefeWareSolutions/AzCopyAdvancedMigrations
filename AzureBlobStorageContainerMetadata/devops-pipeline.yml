@@ -1,0 +1,16 @@
+pool: 
+  name: $(agentName)
+
+jobs:
+- job: Metadata 
+  timeoutInMinutes: 0
+  steps:
+    - task: AzureCLI@2
+      displayName: Get Storage Migration Results
+      inputs:
+        azureSubscription: $(azureSubscriptionEndpoint)
+        scriptType: 'ps'
+        addSpnToEnvironment: true
+        scriptLocation: 'scriptPath'
+        scriptPath: './GetAzureBlobStorageContainerMetadata.ps1'
+        arguments: -storageAccountName $($storageAccountName) -$storageAccountAccessKey $($storageAccountAccessKey) -useMasterKey $(useMasterKey) -useContainerNameList $(useContainerNameList) -containerNameList $(containerNameList)
