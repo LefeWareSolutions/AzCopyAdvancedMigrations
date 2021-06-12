@@ -29,7 +29,7 @@ $azCopyPath="C:\AzCopy\azcopy.exe"
 $env:AZCOPY_SPA_CLIENT_SECRET=$servicePrincipleClientSecret
 &$azCopyPath  login --service-principal --application-id $servicePrincipleClientId --tenant-id $tenantId
 
-#Create SAS Token for Blob Source
+###########################SOURCE ACCOUNT #########################################
 $StartTime = Get-Date
 $EndTime = $startTime.AddHours(48.0)
 $srcStorageAccountUrl = "https://" + $srcStorageAccountName + ".blob.core.windows.net/" 
